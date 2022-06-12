@@ -3,6 +3,7 @@
 #include <optional>
 
 #include <GL/gl.h>
+#include <GL/glext.h>
 
 namespace fs = std::filesystem;
 
