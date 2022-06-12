@@ -114,11 +114,11 @@ int main(int, char**)
   int my_image_width = 0;
   int my_image_height = 0;
   GLuint my_image_texture = 0;
-  std::optional<GLuint> ret = LoadTextureFromFile("A0001.jpg", &my_image_width, &my_image_height);
+  std::optional<GLuint> ret = LoadTextureFromFile("cels/A0001.jpg", &my_image_width, &my_image_height);
   IM_ASSERT(ret);
   my_image_texture = ret.value();
 
-  auto cpaths = ListDirectory(".").value();
+  auto cpaths = ListDirectory("cels").value();
   std::vector<const char *> v;
   std::vector<GLuint> image_textures;
   for (const auto& cpath : cpaths) {
@@ -215,7 +215,13 @@ int main(int, char**)
 
     // 5.5 child widows
     {
+      static int selected = 0;
       ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+      ImGui::Begin("ayy");
+      if (ImGui::IsWindowFocused() && io.WantCaptureMouse) {
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N))) selected++;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P))) selected--;
+      }
       ImGui::BeginChild(
         "ChildL",
         ImVec2(
@@ -223,22 +229,34 @@ int main(int, char**)
           ImGui::GetContentRegionAvail().y),
         false,
         window_flags);
-      for (int i = 0; i < 100; i++)
-        ImGui::Text("%04d: scrollable region", i);
+      int n = 0;
+      for (const auto &cpath: cpaths) {
+        if (ImGui::Selectable(cpath.c_str(), selected == n)) {
+          selected = n;
+        }
+        n++;
+      }
+
       ImGui::EndChild();
+
+      if (selected < 0) selected = 0;
+      if (selected >= cpaths.size()) selected = cpaths.size()-1;
+
       ImGui::SameLine();
 
       ImGui::BeginChild(
         "ChildR",
         ImVec2(
-          ImGui::GetContentRegionAvail().x - 100.0f,
+          ImGui::GetContentRegionAvail().x,
           ImGui::GetContentRegionAvail().y),
         false,
         window_flags);
       ImVec2 avail_size = ImGui::GetContentRegionAvail();
-      ImGui::Image((void*)(intptr_t)image_textures[0], avail_size);
+      ImGui::Image((void*)(intptr_t)image_textures[selected], avail_size);
       ImGui::EndChild();
 
+
+      ImGui::End();
     }
 
     // 6. listbox
