@@ -15,11 +15,11 @@ std::optional<std::set<fs::path>> ListDirectory(const fs::path &p, bool sorted) 
 }
 
 // Simple helper function to load an image into a OpenGL texture with common settings
-std::optional<GLuint> LoadTextureFromFile(const char* filename, int* out_width, int* out_height) {
+std::optional<GLuint> LoadTextureFromFile(const std::string &filename, int* out_width, int* out_height) {
   // Load from file
   int image_width = 0;
   int image_height = 0;
-  unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
+  unsigned char* image_data = stbi_load(filename.c_str(), &image_width, &image_height, NULL, 4);
   if (image_data == NULL)
     return std::nullopt;
 

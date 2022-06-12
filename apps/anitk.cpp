@@ -119,11 +119,11 @@ int main(int, char**)
   my_image_texture = ret.value();
 
   auto cpaths = ListDirectory("cels").value();
-  std::vector<const char *> v;
+  std::vector<std::string> v;
   std::vector<GLuint> image_textures;
   for (const auto& cpath : cpaths) {
-    v.push_back(cpath.c_str());
-    auto r = LoadTextureFromFile(cpath.c_str(), &my_image_width, &my_image_height);
+    v.push_back(cpath.string());
+    auto r = LoadTextureFromFile(cpath.string(), &my_image_width, &my_image_height);
     image_textures.push_back(r.value());
   }
   
@@ -231,7 +231,7 @@ int main(int, char**)
         window_flags);
       int n = 0;
       for (const auto &cpath: cpaths) {
-        if (ImGui::Selectable(cpath.c_str(), selected == n)) {
+        if (ImGui::Selectable(cpath.string().c_str(), selected == n)) {
           selected = n;
         }
         n++;

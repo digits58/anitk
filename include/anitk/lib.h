@@ -8,5 +8,5 @@
 namespace fs = std::filesystem;
 
 std::optional<std::set<fs::path>> ListDirectory(const fs::path &p, bool sorted = false);
-std::optional<GLuint> LoadTextureFromFile(const char *filename, int *out_width, int *out_height);
+std::optional<GLuint> LoadTextureFromFile(const std::string &filename, int *out_width, int *out_height);
 
