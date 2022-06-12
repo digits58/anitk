@@ -6,4 +6,4 @@ target_include_directories(lib PUBLIC
 
 target_sources(lib PRIVATE lib.cpp)
 
-target_link_directories(lib PRIVATE OpenGL::GL)
+target_link_libraries(lib PRIVATE OpenGL::GL)
