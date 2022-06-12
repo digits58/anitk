@@ -1,0 +1,10 @@
+#+TITLE: anitk
+
+A toolkit for creating animation
+
+#+begin_src sh
+git submodule update --init --recursive
+mkdir build && cd build
+cmake ..
+make
+#+end_src
