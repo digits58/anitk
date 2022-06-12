@@ -7,7 +7,7 @@ std::optional<std::set<fs::path>> ListDirectory(const fs::path &p, bool sorted) 
   std::set<fs::path> paths;
   if (fs::exists(p) && fs::is_directory(p)) {
     for (const auto& entry : fs::directory_iterator(p)) {
-      paths.insert(entry.path().filename());
+      paths.insert(entry.path());
     }
     return paths;
   }
