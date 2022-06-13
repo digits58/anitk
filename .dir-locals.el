@@ -13,6 +13,6 @@
                            (cons "-std=c++1z"
                                  (mapcar (lambda (p) (concat "-I" p)) project-includes))))
               (eval . (setq-local company-clang-arguments clang-args))
+              (eval . (setq-local flycheck-clang-include-path project-includes))
               (flycheck-clang-tidy-extra-options . "-extra-arg=-std=c++1z")
-              (flycheck-clang-language-standard . "c++1z")
-              (eval . (setq-local flycheck-clang-include-path project-includes)))))
+              (flycheck-clang-language-standard . "c++1z"))))
