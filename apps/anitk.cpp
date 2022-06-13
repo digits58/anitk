@@ -126,7 +126,7 @@ int main(int, char**)
     auto r = LoadTextureFromFile(cpath.string(), &my_image_width, &my_image_height);
     image_textures.push_back(r.value());
   }
-  
+
   // Main loop
   while (!glfwWindowShouldClose(window))
   {
@@ -141,6 +141,19 @@ int main(int, char**)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    // 0. fill
+    {
+      int width, height;
+      glfwGetWindowSize(window, &width, &height);
+      ImGui::SetNextWindowSize(
+          ImVec2(width, height)); // ensures ImGui fits the GLFW window
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
+
+      ImGui::Begin("t", nullptr, ImGuiWindowFlags_NoDecoration);
+      ImGui::Text("This is some useful text.");
+      ImGui::End();
+    }
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
@@ -218,10 +231,6 @@ int main(int, char**)
       static int selected = 0;
       ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
       ImGui::Begin("ayy");
-      if (ImGui::IsWindowFocused() && io.WantCaptureMouse) {
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N))) selected++;
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P))) selected--;
-      }
       ImGui::BeginChild(
         "ChildL",
         ImVec2(
@@ -236,9 +245,12 @@ int main(int, char**)
         }
         n++;
       }
-
       ImGui::EndChild();
 
+      if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && io.WantCaptureMouse) {
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N))) selected++;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P))) selected--;
+      }
       if (selected < 0) selected = 0;
       if (selected >= cpaths.size()) selected = cpaths.size()-1;
 
