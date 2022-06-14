@@ -264,7 +264,10 @@ int main(int, char**)
         false,
         window_flags);
       ImVec2 avail_size = ImGui::GetContentRegionAvail();
-      ImGui::Image((void*)(intptr_t)image_textures[selected], avail_size);
+      ImGui::Image(
+        (void*)(intptr_t)image_textures[selected],
+        ImVec2((float)my_image_width / (float)my_image_height * (float)avail_size.y,
+               avail_size.y));
       ImGui::EndChild();
 
 
