@@ -2,6 +2,7 @@
 
 A toolkit for creating animation
 
+* Building
 #+begin_src sh
 git submodule update --init --recursive
 mkdir build && cd build

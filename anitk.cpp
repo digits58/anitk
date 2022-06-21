@@ -3,6 +3,9 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
+#define IMGUI_DEFINE_MATH_OPERATORS
+
+#include "imgui_internal.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -144,14 +147,67 @@ int main(int, char**)
 
     // 0. fill
     {
-      int width, height;
-      glfwGetWindowSize(window, &width, &height);
-      ImGui::SetNextWindowSize(
-          ImVec2(width, height)); // ensures ImGui fits the GLFW window
-      ImGui::SetNextWindowPos(ImVec2(0, 0));
+      // int width, height;
+      // glfwGetWindowSize(window, &width, &height);
+      // ImGui::SetNextWindowSize(ImVec2(width, height)); // ensures ImGui fits the GLFW window
+      // ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-      ImGui::Begin("t", nullptr, ImGuiWindowFlags_NoDecoration);
-      ImGui::Text("This is some useful text.");
+      ImGui::Begin("t", nullptr, ImGuiWindowFlags_MenuBar);
+
+      if (ImGui::BeginMenuBar()) {
+          ImGui::MenuItem("About");
+      }
+      ImGui::EndMenuBar();
+
+      static int selected = 0;
+
+      float iw = 100.f;
+      float ih = (float)my_image_height / (float)my_image_width * iw;
+
+      ImGui::BeginChild("Timeline", ImVec2(ImGui::GetContentRegionAvail().x, ih*1.2), false, ImGuiWindowFlags_HorizontalScrollbar);
+      for (int n = 0; n < image_textures.size(); n++) {
+        ImGui::PushID(n);
+        if (n != 0) ImGui::SameLine();
+
+        auto cur = ImGui::GetCursorPos();
+        char buf[32];
+        sprintf(buf, "##Object %d", n);
+        ImGui::SetCursorPos(ImVec2(cur.x, cur.y));
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        if (ImGui::Selectable(buf, selected == n, 0, ImVec2(iw, ih))) {
+          selected = n;
+        }
+        ImGui::PopStyleColor();
+
+        ImGui::SetItemAllowOverlap();
+        ImGui::SetCursorPos(ImVec2(cur.x, cur.y));
+        ImGui::Image((void*)(intptr_t)image_textures[n], ImVec2(iw, ih));
+
+        ImGui::PopID();
+        if (selected == n) {
+          ImGui::SetScrollHereX(0.25f); // 0.0f:left, 0.5f:center, 1.0f:right
+        }
+      }
+
+      if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && io.WantCaptureMouse) {
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N))) selected++;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P))) selected--;
+      }
+      if (selected < 0) selected = 0;
+      if (selected >= image_textures.size()) selected = image_textures.size()-1;
+      ImGui::EndChild();
+
+      ImGui::BeginChild("Viewport",
+                        ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
+                        false,
+                        0);
+
+      ImVec2 avail_size = ImGui::GetContentRegionAvail();
+      ImVec2 i_size = ImVec2((float)my_image_height / (float)my_image_width * avail_size.x, avail_size.y);
+      ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - i_size) * 0.5f +
+                          ImGui::GetWindowSize() - ImGui::GetContentRegionAvail());
+      ImGui::Image((void*)(intptr_t)image_textures[selected], i_size);
+      ImGui::EndChild();
       ImGui::End();
     }
 
@@ -220,7 +276,7 @@ int main(int, char**)
     //     n++;
     //   }
     //   ImGui::NextColumn();
-    //   ImVec2 avail_size = ImGui::GetContentRegionAvail();w
+    //   ImVec2 avail_size = ImGui::GetContentRegionAvail();
     //   ImGui::Image((void*)(intptr_t)image_textures[selected], avail_size);
     //   ImGui::Columns(1);
     //   ImGui::End();

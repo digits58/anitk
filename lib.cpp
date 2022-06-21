@@ -1,3 +1,6 @@
+#include <vector>
+#include <map>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -46,3 +49,21 @@ std::optional<GLuint> LoadTextureFromFile(const std::string &filename, int* out_
 
   return {image_texture};
 }
+
+// void dedupe(fs::path folder, char layer) {
+//   auto files = getLayerFiles(folder, layer);
+//   std::set<std::string> checksums;
+//   fs::path dest("output");
+//   char buf[256];
+//   int n = 1;
+//   for (const auto& f : files) {
+//     auto chk = md5sum(f);
+//     if (checksums.find(chk) != checksums.end()) {
+//       sprintf(buf, "%c_%d", layer, n);
+//       copy_file(f, dest / buf);
+
+//       checksums.insert(chk);
+//       n++;
+//     }
+//   }
+// }
