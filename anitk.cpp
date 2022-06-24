@@ -34,6 +34,12 @@ static void glfw_error_callback(int error, const char* description)
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+void drop_callback(GLFWwindow* window, int count, const char **paths) {
+    for(int n = 0; n < count; n++) {
+        std::cout << paths[n] << std::endl;
+    }
+}
+
 int main(int, char**)
 {
   // Setup window
@@ -69,6 +75,7 @@ int main(int, char**)
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);
+  glfwSetDropCallback(window, drop_callback);
   glfwSwapInterval(1); // Enable vsync
 
   // Setup Dear ImGui context
@@ -138,7 +145,8 @@ int main(int, char**)
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
     // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-    glfwPollEvents();
+    // glfwPollEvents();
+    glfwWaitEvents();
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -185,7 +193,7 @@ int main(int, char**)
 
         ImGui::PopID();
         if (selected == n) {
-          ImGui::SetScrollHereX(0.25f); // 0.0f:left, 0.5f:center, 1.0f:right
+          ImGui::SetScrollHereX(0.5f); // 0.0f:left, 0.5f:center, 1.0f:right
         }
       }
 
@@ -203,7 +211,7 @@ int main(int, char**)
                         0);
 
       ImVec2 avail_size = ImGui::GetContentRegionAvail();
-      ImVec2 i_size = ImVec2((float)my_image_height / (float)my_image_width * avail_size.x, avail_size.y);
+      ImVec2 i_size = ImVec2( (float)my_image_width / (float)my_image_height * avail_size.y, avail_size.y);
       ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - i_size) * 0.5f +
                           ImGui::GetWindowSize() - ImGui::GetContentRegionAvail());
       ImGui::Image((void*)(intptr_t)image_textures[selected], i_size);
