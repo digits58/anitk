@@ -6,7 +6,7 @@ project(anitk VERSION 1.0
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "The C++ standard to use")
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -26,10 +26,9 @@ add_subdirectory(extern/glfw)
 add_library(lib)
 
 target_include_directories(lib PUBLIC
-    include
     extern/stb)
 
-target_sources(lib PRIVATE lib.cpp)
+target_sources(lib PRIVATE lib.cpp crc32.cpp)
 
 target_link_libraries(lib PRIVATE OpenGL::GL)
 
