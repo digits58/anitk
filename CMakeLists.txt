@@ -57,8 +57,6 @@ target_link_libraries(lib PRIVATE OpenGL::GL)
 # anitk
 add_executable(anitk)
 
-target_compile_options(anitk PRIVATE -Werror -Wall -Wextra)
-
 target_include_directories(anitk PRIVATE
     extern/imgui
     extern/imgui/backends
@@ -81,6 +79,7 @@ target_sources(anitk PRIVATE
     extern/imgui/misc/cpp/imgui_stdlib.cpp)
 
 if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_sources(anitk PRIVATE icon.rc)
     target_link_options(anitk PRIVATE -mwindows)
     target_link_libraries(anitk PRIVATE -static gcc stdc++)
 endif()
@@ -91,7 +90,7 @@ target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ANITK_BUILD_TESTING)
         AND BUILD_TESTING)
   # Use system Catch2 or extern
-  find_package(Catch2 QUIET)
+  # find_package(Catch2 QUIET)
   if (NOT Catch2_FOUND)
       message("Catch2 not installed, building from extern")
       set(CATCH_USE_VALGRIND OFF CACHE BOOL "" FORCE)
