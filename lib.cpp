@@ -75,7 +75,7 @@ std::vector<std::pair<fs::path, fs::path>> dedupeImagePaths(std::set<fs::path> i
   std::map<uint32_t, int> checksums;
   for (const fs::path &f : input) {
     if (auto res = crc32file(f.string())) {
-      uint32_t chk = res.value().first; 
+      uint32_t chk = res.value().first;
       if (checksums.find(chk) == checksums.end()) {
         std::string filename = f.filename().string();
         auto nameEnd = std::find_if(filename.begin(), filename.end(), [](char c) { return isdigit(c); });
@@ -89,7 +89,7 @@ std::vector<std::pair<fs::path, fs::path>> dedupeImagePaths(std::set<fs::path> i
 
         // Create the name
         char buf[256];
-        snprintf(buf, 255, fmt, layerHeader.c_str(), layer_count[layer], f.extension().c_str());
+        snprintf(buf, 255, fmt, layerHeader.c_str(), layer_count[layer], f.extension().string().c_str());
 
         // Copy file
         io.push_back({f, dest / buf});

@@ -54,9 +54,10 @@ target_sources(anitk PRIVATE
 target_sources(anitk PRIVATE
     extern/imgui/misc/cpp/imgui_stdlib.cpp)
 
-IF(WIN32)
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(anitk PRIVATE -mwindows)
-endif(WIN32)
+    target_link_libraries(anitk PRIVATE -static gcc stdc++)
+endif()
 target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 
 

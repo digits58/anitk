@@ -20,12 +20,31 @@ TEST_CASE( "Factorials are computed", "[factorial]" ) {
 TEST_CASE("crc32 working", "[crc32]") {
   REQUIRE( crc32buf({}) == 0 );
   REQUIRE( crc32buf({'1','2','3','4','5','6','7','8','9'}) == 0xcbf43926 );
-  auto res = crc32file("imgui.ini");
-  if (res) {
+  
+  if (auto res = crc32file("imgui.ini")) {
     std::cout << std::hex << res.value().first << std::endl;
   }
+
+  
+  if (auto res = crc32file("cels\\A0001.jpg")) {
+      std::cout << res->first << ' ' << res->second << std::endl;
+  }
+  if (auto res = crc32file("cels\\A0027.jpg")) {
+      std::cout << res->first << ' ' << res->second << std::endl;
+  }
+  if (auto res = crc32file("cels/A0027.jpg")) {
+      std::cout << res->first << ' ' << res->second << std::endl;
+  }
+  if (auto res = crc32file("A0001.jpg")) {
+      std::cout << res->first << ' ' << res->second << std::endl;
+  }
+  if (auto res = crc32file("A0010.jpg")) {
+      std::cout << res->first << ' ' << res->second << std::endl;
+  }
+
+
 }
 
-TEST_CASE("dedupe", "[crc32]") {
-  dedupe("cels", "output");
-}
+// TEST_CASE("dedupe", "[crc32]") {
+//   dedupe("cels", "output");
+// }

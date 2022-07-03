@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <map>
 #include <stdio.h>
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -78,6 +79,7 @@ int main(int, char**) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO(); (void)io;
+  io.IniFilename = NULL;
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -178,7 +180,7 @@ int main(int, char**) {
     static std::string dest = "output";
     static bool first = true;
 
-    ImGui::Text("Src: %s", CelsPath.c_str());
+    ImGui::Text("Src: %s", CelsPath.string().c_str());
     ImGui::Text("Dest: %s", dest.c_str());
     // ImGui::SameLine();
     // ImGui::InputText("##Destination", &dest);
@@ -206,7 +208,7 @@ int main(int, char**) {
       if (first) ImGui::SetNextItemOpen(true);
       if (ImGui::TreeNode(buf)) {
         for (const auto& p : paths) {
-          ImGui::Text("%s", p.filename().c_str());
+            ImGui::Text("%s", p.filename().string().c_str());
         }
         ImGui::TreePop();
       }
@@ -222,13 +224,16 @@ int main(int, char**) {
     // ImGui::InputInt("zero padding", &i0);
     ImGui::Text("%s", "Output");
     ImGui::Separator();
+
+    static std::map<std::string, std::vector<std::pair<fs::path, fs::path>>> dedupes;
     for (const auto &[layer, paths] : cels.dedupe) {
       char buf[256];
       snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
       if (first) ImGui::SetNextItemOpen(true);
       if (ImGui::TreeNode(buf)) {
-        for (const auto& [in, out] : dedupeImagePaths(paths)) {
-          ImGui::Text("%s", out.filename().c_str());
+          if (dedupes.count(layer) == 0) dedupes[layer] = dedupeImagePaths(paths);
+        for (const auto& [in, out] : dedupes[layer]) {
+            ImGui::Text("%s", out.filename().string().c_str());
         }
         ImGui::TreePop();
       }

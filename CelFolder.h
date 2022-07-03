@@ -45,6 +45,7 @@ public:
         auto imagePath = entry.path();
         if (auto res = crc32file(imagePath.string())) {
           uint32_t chk = res.value().first;
+
           if (instanceHeads.count(chk) == 0) {
             instanceHeads[chk] = imagePath;
           }
@@ -58,7 +59,8 @@ public:
   void getLayers() {
     for (const fs::directory_entry &entry : fs::directory_iterator(folderPath)) {
       if(fs::is_regular_file(entry)) {
-        layers[entry.path().filename().string().substr(0,1)].insert(entry.path());
+          std::string header = entry.path().filename().string().substr(0,1);
+        layers[header].insert(entry.path());
       }
     }
   }
@@ -76,6 +78,7 @@ public:
     for (const fs::path &imagePath : layer) {
       if (auto res = crc32file(imagePath.string())) {
         uint32_t chk = res.value().first;
+
         if (!dupe[chk]) {
           result.insert(imagePath);
           dupe[chk] = true;

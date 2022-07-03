@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "crc32.h"
-
+#include <iostream>
 #define UPDC32(byte,crc) (crc_32_tab[((crc) \
                                       ^ ((uint8_t)byte)) & 0xff] ^ ((crc) >> 8))
 
@@ -55,16 +55,20 @@ uint32_t crc32update(uint8_t byte, uint32_t crc) {
   return UPDC32(byte, crc);
 }
 
-std::optional<std::pair<uint32_t, long>> crc32file(const std::string &name) {
+std::optional<std::pair<uint32_t, uint32_t>> crc32file(const std::string &name) {
   FILE *fin;
+#if defined(MSDOS) || defined(_WIN32)
+  if ((fin=fopen(name.c_str(), "rb")) == NULL) {
+#else
   if ((fin=fopen(name.c_str(), "r")) == NULL) {
+#endif
     perror(name.c_str());
     return {};
   }
 
   int c;
   uint32_t crc32 = 0xFFFFFFFF;
-  long charcnt = 0;
+  uint32_t charcnt = 0;
   while ((c=getc(fin)) != EOF) {
     ++charcnt;
     crc32 = UPDC32(c, crc32);

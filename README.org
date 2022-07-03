@@ -5,7 +5,13 @@ A toolkit for creating animation
 * Building
 #+begin_src sh
 git submodule update --init --recursive
-mkdir build && cd build
-cmake ..
-make
+
+# Debug
+cmake -S . -B build/debug -D CMAKE_BUILD_TYPE=Debug
+cmake --build build/debug
+
+# Release
+cmake -S . -B build/release -D CMAKE_BUILD_TYPE=Release
+cmake --build build/release
+
 #+end_src
