@@ -54,6 +54,9 @@ target_sources(anitk PRIVATE
 target_sources(anitk PRIVATE
     extern/imgui/misc/cpp/imgui_stdlib.cpp)
 
+IF(WIN32)
+    target_link_options(anitk PRIVATE -mwindows)
+endif(WIN32)
 target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 
 
