@@ -1,10 +1,8 @@
 #include <stdio.h>
 
-#include "crc32.h"
-#include <iostream>
 #include <fstream>
-#define UPDC32(byte,crc) (crc_32_tab[((crc) \
-                                      ^ ((uint8_t)byte)) & 0xff] ^ ((crc) >> 8))
+
+#include "crc32.h"
 
 static uint32_t crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
   0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -52,27 +50,26 @@ static uint32_t crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
   0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-uint32_t crc32update(uint8_t byte, uint32_t crc) {
-  return UPDC32(byte, crc);
+inline uint32_t crc32update(uint8_t byte, uint32_t crc) {
+  return crc_32_tab[((crc) ^ ((uint8_t)byte)) & 0xff] ^ ((crc) >> 8);
 }
-
 
 uint32_t crc32file(const std::string &name) {
   std::ifstream f(name, std::ios::in | std::ios::binary);
   char c;
   uint32_t crc32 = 0xFFFFFFFF;
   while (f.get(c)) {
-    crc32 = UPDC32(c, crc32);
+    crc32 = crc32update(c, crc32);
   }
   f.close();
   return ~crc32;
 }
 
-uint32_t crc32buf(std::vector<uint8_t> buf) {
+uint32_t crc32buf(const std::vector<uint8_t> &buf) {
   uint32_t crc32 = 0xFFFFFFFF;
 
   for (const auto &c : buf) {
-    crc32 = UPDC32(c, crc32);
+    crc32 = crc32update(c, crc32);
   }
 
   return ~crc32;     

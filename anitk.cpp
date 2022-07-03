@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
   // io.Fonts->Build();
 
   // Our state
-  bool show_demo_window = false;
+  // bool show_demo_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   // Drag and drop loop
@@ -258,8 +258,8 @@ int main(int argc, char** argv) {
     ImGui::EndChild();
     ImGui::End();
 
-    if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
+    // if (show_demo_window)
+    //   ImGui::ShowDemoWindow(&show_demo_window);
 
     // Rendering
     ImGui::Render();

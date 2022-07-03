@@ -17,24 +17,31 @@ endif()
 find_package(OpenGL REQUIRED)
 
 # GLFW
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(extern/glfw)
+find_package(glfw3 QUIET)
+if (NOT glfw3_FOUND)
+    message("glfw3 not installed, building from extern")
+  set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+  set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  add_subdirectory(extern/glfw)
+endif()
 
 # Configure
 find_package(Git)
-execute_process(COMMAND
-  "${GIT_EXECUTABLE}" describe --match=NeVeRmAtCh --always --abbrev=40 --dirty
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  OUTPUT_VARIABLE GIT_COMMIT_SHA1
-  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND
-  "${GIT_EXECUTABLE}" log -1 --format=%ad --date=local
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  OUTPUT_VARIABLE GIT_COMMIT_DATE
-  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+if (Git_FOUND)
+    execute_process(COMMAND
+        "${GIT_EXECUTABLE}" describe --match=NeVeRmAtCh --always --abbrev=40 --dirty
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        OUTPUT_VARIABLE GIT_COMMIT_SHA1
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND
+        "${GIT_EXECUTABLE}" log -1 --format=%ad --date=local
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        OUTPUT_VARIABLE GIT_COMMIT_DATE
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 configure_file(config.h.in config.h)
+
 
 # libanitk lib
 add_library(lib)
@@ -65,7 +72,8 @@ target_sources(anitk PRIVATE
     extern/imgui/imgui_tables.cpp
     extern/imgui/imgui_draw.cpp
     extern/imgui/imgui_widgets.cpp
-    extern/imgui/imgui_demo.cpp)
+    # extern/imgui/imgui_demo.cpp
+    )
 target_sources(anitk PRIVATE
     extern/imgui/backends/imgui_impl_glfw.cpp
     extern/imgui/backends/imgui_impl_opengl3.cpp)
@@ -82,9 +90,14 @@ target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ANITK_BUILD_TESTING)
         AND BUILD_TESTING)
-  find_package(Catch2)
+  # Use system Catch2 or extern
+  find_package(Catch2 QUIET)
   if (NOT Catch2_FOUND)
       message("Catch2 not installed, building from extern")
+      set(CATCH_USE_VALGRIND OFF CACHE BOOL "" FORCE)
+      set(CATCH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+      set(CATCH_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
+      set(CATCH_ENABLE_WERROR OFF CACHE BOOL "" FORCE)
       add_subdirectory(extern/Catch2)
   endif()
   add_subdirectory(tests)

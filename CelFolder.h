@@ -18,16 +18,11 @@ public:
   std::map<std::string, std::set<fs::path>> layers;
   std::map<std::string, std::set<fs::path>> dedupe;
 
-  std::map<uint32_t, fs::path> instanceHeads;
-  std::map<fs::path, uint32_t> instanceChecksums;
-  std::map<uint32_t, std::set<fs::path>> duplicates;
-
   CelFolder(fs::path path) : folderPath(path) {
     if (!fs::exists(folderPath)) throw;
     if (!fs::is_directory(folderPath)) throw;
     imagePaths = list();
     getLayers();
-    findDuplicates();
     dedupeLayers();
   }
 
@@ -37,23 +32,6 @@ public:
       paths.insert(entry.path());
     }
     return paths;
-  }
-
-  void findDuplicates() {
-    for (const fs::directory_entry &entry : fs::directory_iterator(folderPath)) {
-      if(fs::is_regular_file(entry)) {
-        auto imagePath = entry.path();
-        if (auto res = crc32file(imagePath.string())) {
-          uint32_t chk = res;
-
-          if (instanceHeads.count(chk) == 0) {
-            instanceHeads[chk] = imagePath;
-          }
-          instanceChecksums[imagePath] = chk;
-          duplicates[chk].insert(imagePath);
-        }
-      }
-    }
   }
 
   void getLayers() {
