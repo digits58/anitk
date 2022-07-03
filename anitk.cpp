@@ -20,6 +20,7 @@
 
 #include "lib.h"
 #include "CelFolder.h"
+#include "config.h"
 
 static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -27,16 +28,24 @@ static void glfw_error_callback(int error, const char* description) {
 
 fs::path CelsPath;
 
-void drop_callback(GLFWwindow* window, int count, const char **paths) {
+void drop_callback(GLFWwindow* window [[maybe_unused]], int count, const char **paths) {
   if (count != 1) return;
 
   fs::path p(paths[0]);
   if (!fs::is_directory(p)) return;
 
-  CelsPath = fs::absolute(p);
+  CelsPath = p;
 }
 
-int main(int, char**) {
+static std::string BUILD_DATE = __DATE__;
+static std::string BUILD_TIME = __TIME__;
+static std::string BUILD_TIMESTAMP = BUILD_DATE + ' ' + BUILD_TIME;
+
+int main(int argc, char** argv) {
+  if (argc > 1) {
+    CelsPath = argv[1];
+  }
+
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit())
@@ -114,7 +123,7 @@ int main(int, char**) {
   // io.Fonts->Build();
 
   // Our state
-  bool show_demo_window = true;
+  bool show_demo_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   // Drag and drop loop
@@ -128,8 +137,15 @@ int main(int, char**) {
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::Begin("Drag and Drop", nullptr, ImGuiWindowFlags_NoDecoration);
-    auto windowWidth = ImGui::GetWindowSize().x;
-    auto windowHeight = ImGui::GetWindowSize().y;
+
+    ImGui::Text("%s v%s", PROJECT_NAME, PROJECT_VER);
+    ImGui::Text("last commit: %s", GIT_COMMIT_SHA1);
+    ImGui::Text("commit date: %s", GIT_COMMIT_DATE);
+    ImGui::Text("build date: %s", BUILD_TIMESTAMP.c_str());
+    ImGui::Separator();
+
+    auto windowWidth = ImGui::GetContentRegionAvail().x;
+    auto windowHeight = ImGui::GetContentRegionAvail().y;
 
     if (CelsPath.empty()) {
       std::string text = "Drag and drop cel folder";
@@ -242,8 +258,8 @@ int main(int, char**) {
     ImGui::EndChild();
     ImGui::End();
 
-    // if (show_demo_window)
-    //   ImGui::ShowDemoWindow(&show_demo_window);
+    if (show_demo_window)
+      ImGui::ShowDemoWindow(&show_demo_window);
 
     // Rendering
     ImGui::Render();

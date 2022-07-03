@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(anitk VERSION 1.0
+project(anitk VERSION 0.0.1
               DESCRIPTION "An animation toolkit"
               LANGUAGES CXX)
 
@@ -22,6 +22,20 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(extern/glfw)
 
+# Configure
+find_package(Git)
+execute_process(COMMAND
+  "${GIT_EXECUTABLE}" describe --match=NeVeRmAtCh --always --abbrev=40 --dirty
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE GIT_COMMIT_SHA1
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND
+  "${GIT_EXECUTABLE}" log -1 --format=%ad --date=local
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE GIT_COMMIT_DATE
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+configure_file(config.h.in config.h)
+
 # libanitk lib
 add_library(lib)
 
@@ -36,10 +50,14 @@ target_link_libraries(lib PRIVATE OpenGL::GL)
 # anitk
 add_executable(anitk)
 
+target_compile_options(anitk PRIVATE -Werror -Wall -Wextra)
+
 target_include_directories(anitk PRIVATE
     extern/imgui
     extern/imgui/backends
     extern/imgui/misc/cpp)
+target_include_directories(anitk PRIVATE
+    ${PROJECT_BINARY_DIR})
 
 target_sources(anitk PRIVATE anitk.cpp)
 target_sources(anitk PRIVATE
@@ -59,7 +77,6 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_libraries(anitk PRIVATE -static gcc stdc++)
 endif()
 target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
-
 
 # Testing - Only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well

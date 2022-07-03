@@ -3,9 +3,13 @@
                            (expand-file-name (locate-dominating-file default-directory ".dir-locals.el"))))
               (eval . (set (make-local-variable 'project-includes)
                            (mapcar (lambda (p) (concat project-path p))
-                                   '("include"
+                                   '("build"
+                                     "build/release"
+                                     "build/debug"
+                                     "include"
                                      "extern/imgui"
                                      "extern/imgui/backends"
+                                     "extern/imgui/misc/cpp"
                                      "extern/Catch2/src"
                                      "extern/glfw/include"
                                      "extern/stb"))))
