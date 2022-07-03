@@ -1,15 +1,12 @@
-// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
-// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
-
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "imgui_internal.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
 
+#include <array>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -21,13 +18,7 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 #include "lib.h"
-
-// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
-// To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
-// Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
-#if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#pragma comment(lib, "legacy_stdio_definitions")
-#endif
+#include "CelFolder.h"
 
 static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -139,7 +130,7 @@ int main(int, char**) {
     auto windowHeight = ImGui::GetWindowSize().y;
 
     if (CelsPath.empty()) {
-      std::string text = "Drag and drop cel folder here";
+      std::string text = "Drag and drop cel folder";
       auto textWidth = ImGui::CalcTextSize(text.c_str()).x;
       auto textHeight = ImGui::CalcTextSize(text.c_str()).y;
       ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
@@ -153,9 +144,10 @@ int main(int, char**) {
       ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
       ImGui::SetCursorPosY((windowHeight - textHeight) * 0.5f);
 
-      ImGui::Text(text.c_str());
+      ImGui::Text("%s", text.c_str());
     }
     ImGui::End();
+
 
     // Rendering
     ImGui::Render();
@@ -169,108 +161,84 @@ int main(int, char**) {
     glfwSwapBuffers(window);
   }
 
-  // Image
-  int my_image_width = 0;
-  int my_image_height = 0;
-  GLuint my_image_texture = 0;
-  std::optional<GLuint> ret = LoadTextureFromFile("cels/A0001.jpg", &my_image_width, &my_image_height);
-  IM_ASSERT(ret);
-  my_image_texture = ret.value();
-
-  auto cpaths = ListDirectory("cels").value();
-  std::vector<std::string> v;
-  std::vector<GLuint> image_textures;
-  for (const auto& cpath : cpaths) {
-    v.push_back(cpath.string());
-    auto r = LoadTextureFromFile(cpath.string(), &my_image_width, &my_image_height);
-    image_textures.push_back(r.value());
-  }
-
-  glfwSetWindowSize(window, 1024, 768);
-
-  // Main loop
   while (!glfwWindowShouldClose(window)) {
-    // Poll and handle events (inputs, window resize, etc.)
-    // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-    // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-    // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-    // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-    // glfwPollEvents();
     glfwWaitEvents();
 
-    // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // int width, height;
-    // glfwGetWindowSize(window, &width, &height);
-    // ImGui::SetNextWindowSize(ImVec2(width, height)); // ensures ImGui fits the GLFW window
-    // ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-    ImGui::Begin("t", nullptr, ImGuiWindowFlags_MenuBar);
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 
-    if (ImGui::BeginMenuBar()) {
-      ImGui::MenuItem("About");
-    }
-    ImGui::EndMenuBar();
+    ImGui::Begin("Layers", nullptr, ImGuiWindowFlags_NoDecoration);
 
-    static int selected = 0;
+    static CelFolder cels = CelFolder(CelsPath);
+    static std::string dest = "output";
+    static bool first = true;
 
-    float iw = 100.f;
-    float ih = (float)my_image_height / (float)my_image_width * iw;
+    ImGui::Text("Src: %s", CelsPath.c_str());
+    ImGui::Text("Dest: %s", dest.c_str());
+    // ImGui::SameLine();
+    // ImGui::InputText("##Destination", &dest);
 
-    ImGui::BeginChild("Timeline", ImVec2(ImGui::GetContentRegionAvail().x, ih*1.2), false, ImGuiWindowFlags_HorizontalScrollbar);
-    for (int n = 0; n < image_textures.size(); n++) {
-      ImGui::PushID(n);
-      if (n != 0) ImGui::SameLine();
-
-      auto cur = ImGui::GetCursorPos();
-      char buf[32];
-      sprintf(buf, "##Object %d", n);
-      ImGui::SetCursorPos(ImVec2(cur.x, cur.y));
-      ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-      if (ImGui::Selectable(buf, selected == n, 0, ImVec2(iw, ih))) {
-        selected = n;
+    if (ImGui::Button("Run")) {
+      for (const auto &[layer, paths] : cels.dedupe) {
+        auto changes = dedupeImagePaths(paths);
+        // for (const auto& [in, out] : changes) {
+        //   std::cout<< in << "->" << out << std::endl;
+        // }
+        executeChanges(changes);
       }
-      ImGui::PopStyleColor();
+    };
+    ImGui::Separator();
 
-      ImGui::SetItemAllowOverlap();
-      ImGui::SetCursorPos(ImVec2(cur.x, cur.y));
-      ImGui::Image((void*)(intptr_t)image_textures[n], ImVec2(iw, ih));
-      ImGui::PopID();
-      if (selected == n) {
-        ImGui::SetScrollHereX(0.5f); // 0.0f:left, 0.5f:center, 1.0f:right
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+    ImGui::BeginChild("Input", ImVec2(contentRegion.x/2.0f -10.0f, -1.0f));
+    ImGui::Text("%s", "Input");
+    ImGui::Separator();
+
+    for (const auto &[layer, paths] : cels.layers) {
+      char buf[256];
+      snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
+      if (first) ImGui::SetNextItemOpen(true);
+      if (ImGui::TreeNode(buf)) {
+        for (const auto& p : paths) {
+          ImGui::Text("%s", p.filename().c_str());
+        }
+        ImGui::TreePop();
       }
     }
 
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && io.WantCaptureMouse) {
-      if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N))) selected++;
-      if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P))) selected--;
-    }
-    if (selected < 0) selected = 0;
-    if (selected >= image_textures.size()) selected = image_textures.size()-1;
     ImGui::EndChild();
 
-    ImGui::BeginChild("Viewport",
-                      ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
-                      false,
-                      0);
+    ImGui::SameLine();
 
-    ImVec2 avail_size = ImGui::GetContentRegionAvail();
-    ImVec2 i_size = ImVec2( (float)my_image_width / (float)my_image_height * avail_size.y, avail_size.y);
-    ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - i_size) * 0.5f +
-                        ImGui::GetWindowSize() - ImGui::GetContentRegionAvail());
-    ImGui::Image((void*)(intptr_t)image_textures[selected], i_size);
+
+    ImGui::BeginChild("Output", ImVec2(contentRegion.x/2.0f -10.0f, -1.0f));
+    // static int i0 = digitCount(cels.imagePaths.begin()->filename().string());
+    // ImGui::InputInt("zero padding", &i0);
+    ImGui::Text("%s", "Output");
+    ImGui::Separator();
+    for (const auto &[layer, paths] : cels.dedupe) {
+      char buf[256];
+      snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
+      if (first) ImGui::SetNextItemOpen(true);
+      if (ImGui::TreeNode(buf)) {
+        for (const auto& [in, out] : dedupeImagePaths(paths)) {
+          ImGui::Text("%s", out.filename().c_str());
+        }
+        ImGui::TreePop();
+      }
+    }
+    first = false;
     ImGui::EndChild();
     ImGui::End();
 
-
-    if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
-  
-
-    // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+    // if (show_demo_window)
+    //   ImGui::ShowDemoWindow(&show_demo_window);
 
     // Rendering
     ImGui::Render();

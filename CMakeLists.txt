@@ -38,7 +38,8 @@ add_executable(anitk)
 
 target_include_directories(anitk PRIVATE
     extern/imgui
-    extern/imgui/backends)
+    extern/imgui/backends
+    extern/imgui/misc/cpp)
 
 target_sources(anitk PRIVATE anitk.cpp)
 target_sources(anitk PRIVATE
@@ -50,6 +51,8 @@ target_sources(anitk PRIVATE
 target_sources(anitk PRIVATE
     extern/imgui/backends/imgui_impl_glfw.cpp
     extern/imgui/backends/imgui_impl_opengl3.cpp)
+target_sources(anitk PRIVATE
+    extern/imgui/misc/cpp/imgui_stdlib.cpp)
 
 target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 

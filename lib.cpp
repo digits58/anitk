@@ -1,3 +1,6 @@
+#include <ctype.h>
+
+#include <algorithm>
 #include <array>
 #include <vector>
 #include <map>
@@ -53,36 +56,107 @@ std::optional<GLuint> LoadTextureFromFile(const std::string &filename, int* out_
   return {image_texture};
 }
 
-void dedupe(fs::path folder) {
+int digitCount(const std::string &str) {
+  int digitCount = 0;
+  for (const char &c : str) {
+    if (isdigit(c)) digitCount++;
+  }
+  return digitCount;
+}
+
+std::vector<std::pair<fs::path, fs::path>> dedupeImagePaths(std::set<fs::path> input) {
+  std::vector<std::pair<fs::path, fs::path>> io;
+  fs::path dest = fs::absolute("output");
+  
+  // Initialize layer
+  std::array<int,256> layer_count;
+  layer_count.fill(1);
+
+  std::map<uint32_t, int> checksums;
+  for (const fs::path &f : input) {
+    if (auto res = crc32file(f.string())) {
+      uint32_t chk = res.value().first; 
+      if (checksums.find(chk) == checksums.end()) {
+        std::string filename = f.filename().string();
+        auto nameEnd = std::find_if(filename.begin(), filename.end(), [](char c) { return isdigit(c); });
+
+        std::string layerHeader = filename.substr(0, filename.find(*nameEnd));
+        char layer = filename[0];
+
+        // Specify the zero padding in the fmt string
+        char fmt[256];
+        snprintf(fmt, 255, "%%s%%0%dd%%s", digitCount(f.filename().string()));
+
+        // Create the name
+        char buf[256];
+        snprintf(buf, 255, fmt, layerHeader.c_str(), layer_count[layer], f.extension().c_str());
+
+        // Copy file
+        io.push_back({f, dest / buf});
+
+        layer_count[layer]++;
+      }
+      checksums[chk]++;
+    }
+  }
+  return io;
+}
+
+void executeChanges(std::vector<std::pair<fs::path, fs::path>> changes) {
+  // Create output directory if it doesn't exist
+  fs::path dest = fs::absolute(fs::path("output"));
+  if (!fs::exists(dest)) fs::create_directory(dest);
+
+  for (const auto &[in, out] : changes) {
+    try {
+      fs::copy_file(in, out, fs::copy_options::overwrite_existing);
+    } catch (fs::filesystem_error &e) {
+      std::cout << "Could not copy file: " << e.what() << '\n';
+    }
+  }
+}
+
+void dedupe(fs::path inputFolder, fs::path outputFolder) {
+  // Fetch the frames in the folder
   std::set<fs::path> frames;
-  for (const auto& f : fs::directory_iterator(folder)) {
+  for (const auto& f : fs::directory_iterator(inputFolder)) {
     if (f.is_regular_file()) {
       frames.insert(f.path());
     }
   }
 
-  fs::path dest = fs::absolute("output");
+  // Create output directory if it doesn't exist
+  fs::path dest = fs::absolute(outputFolder);
   std::cout << dest << std::endl;
   if (!fs::exists(dest)) fs::create_directory(dest);
 
+  // Initialize layer
   std::array<int,256> layer_count;
   layer_count.fill(1);
 
   std::map<uint32_t, int> checksums;
   for (const auto& f : frames) {
-    std::cout << f << std::endl;
     if (auto res = crc32file(f.string())) {
       uint32_t chk = res.value().first; 
-      std::cout << std::hex << chk << std::endl;
       if (checksums.find(chk) == checksums.end()) {
-        char layer = f.filename().string()[0];
+        std::string filename = f.filename().string();
+        auto nameEnd = std::find_if(filename.begin(), filename.end(), [](char c) { return isdigit(c); });
+
+        std::string layerHeader = filename.substr(0, filename.find(*nameEnd));
+        char layer = filename[0];
+
+        // Specify the zero padding in the fmt string
+        char fmt[256];
+        snprintf(fmt, 255, "%%s%%0%dd%%s", digitCount(f.filename().string()));
+
+        // Create the name
         char buf[256];
-        snprintf(buf, 256, "%c%04d%s", layer, layer_count[layer], f.extension().c_str());
-        std::cout << buf << std::endl;
+        snprintf(buf, 255, fmt, layerHeader.c_str(), layer_count[layer], f.extension().c_str());
+
+        // Copy file
         try {
           fs::path d = dest / buf;
-          std::cout << d << std::endl;
-          fs::copy_file(fs::absolute(f), d, fs::copy_options::overwrite_existing);
+          fs::copy_file(f, d, fs::copy_options::overwrite_existing);
         } catch (fs::filesystem_error &e) {
           std::cout << "Could not copy file: " << e.what() << '\n';
         }
@@ -90,10 +164,6 @@ void dedupe(fs::path folder) {
         layer_count[layer]++;
       }
       checksums[chk]++;
-      std::cout << std::endl;
     }
-  }
-  for (auto const &[k, v] : checksums) {
-    std::cout<< k << ' ' << v << std::endl;
   }
 }

@@ -27,5 +27,5 @@ TEST_CASE("crc32 working", "[crc32]") {
 }
 
 TEST_CASE("dedupe", "[crc32]") {
-  dedupe("cels");
+  dedupe("cels", "output");
 }
