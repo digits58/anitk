@@ -80,8 +80,12 @@ target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 
 # Testing - Only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
-    AND BUILD_TESTING)
-  add_subdirectory(extern/Catch2)
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ANITK_BUILD_TESTING)
+        AND BUILD_TESTING)
+  find_package(Catch2)
+  if (NOT Catch2_FOUND)
+      message("Catch2 not installed, building from extern")
+      add_subdirectory(extern/Catch2)
+  endif()
   add_subdirectory(tests)
 endif()

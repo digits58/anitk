@@ -44,7 +44,7 @@ public:
       if(fs::is_regular_file(entry)) {
         auto imagePath = entry.path();
         if (auto res = crc32file(imagePath.string())) {
-          uint32_t chk = res.value().first;
+          uint32_t chk = res;
 
           if (instanceHeads.count(chk) == 0) {
             instanceHeads[chk] = imagePath;
@@ -77,7 +77,7 @@ public:
 
     for (const fs::path &imagePath : layer) {
       if (auto res = crc32file(imagePath.string())) {
-        uint32_t chk = res.value().first;
+        uint32_t chk = res;
 
         if (!dupe[chk]) {
           result.insert(imagePath);
@@ -85,7 +85,6 @@ public:
         }
       }
     }
-
     return result;
   }
 };

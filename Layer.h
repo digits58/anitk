@@ -28,10 +28,8 @@ public:
     std::map<uint32_t, std::set<fs::path>> groupsByChecksum;
     
     for (const fs::path &imagePath : imagePaths) {
-      if (auto res = crc32file(imagePath.string())) {
-        uint32_t chk = res.value().first;
-        groupsByChecksum[chk].insert(imagePath);
-      }
+      uint32_t chk = crc32file(imagePath.string());
+      groupsByChecksum[chk].insert(imagePath);
     }
 
     std::vector<std::vector<fs::path>> groupBySequence;
