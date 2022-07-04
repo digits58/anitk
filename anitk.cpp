@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::Begin("Drag and Drop", nullptr, ImGuiWindowFlags_NoDecoration);
 
-    ImGui::Text("%s v%s", PROJECT_NAME, PROJECT_VER);
+    ImGui::Text("%s v%s by 58", PROJECT_NAME, PROJECT_VER);
     ImGui::Text("last commit: %s", GIT_COMMIT_SHA1);
     ImGui::Text("commit date: %s", GIT_COMMIT_DATE);
     ImGui::Text("build date: %s", BUILD_TIMESTAMP.c_str());
