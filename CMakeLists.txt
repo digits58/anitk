@@ -19,7 +19,7 @@ find_package(OpenGL REQUIRED)
 # GLFW
 find_package(glfw3 QUIET)
 if (NOT glfw3_FOUND)
-    message("glfw3 not installed, building from extern")
+  message("glfw3 not installed, building from extern")
   set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
   set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -80,8 +80,10 @@ target_sources(anitk PRIVATE
 
 if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     target_sources(anitk PRIVATE icon.rc)
-    target_link_options(anitk PRIVATE -mwindows)
-    target_link_libraries(anitk PRIVATE -static gcc stdc++)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(anitk PRIVATE -mwindows)
+        target_link_libraries(anitk PRIVATE -static gcc stdc++)
+    endif()
 endif()
 target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
 
