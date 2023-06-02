@@ -37,10 +37,6 @@ void drop_callback(GLFWwindow* window [[maybe_unused]], int count, const char **
   CelsPath = p;
 }
 
-static std::string BUILD_DATE = __DATE__;
-static std::string BUILD_TIME = __TIME__;
-static std::string BUILD_TIMESTAMP = BUILD_DATE + ' ' + BUILD_TIME;
-
 int main(int argc, char** argv) {
   if (argc > 1) {
     CelsPath = argv[1];

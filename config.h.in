@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <string>
+
 #define PROJECT_NAME "@PROJECT_NAME@"
 #define PROJECT_VER  "@PROJECT_VERSION@"
 #define PROJECT_VER_MAJOR "@PROJECT_VERSION_MAJOR@"
@@ -9,5 +11,9 @@
 
 #define GIT_COMMIT_SHA1 "@GIT_COMMIT_SHA1@"
 #define GIT_COMMIT_DATE "@GIT_COMMIT_DATE@"
+
+static std::string BUILD_DATE = __DATE__;
+static std::string BUILD_TIME = __TIME__;
+static std::string BUILD_TIMESTAMP = BUILD_DATE + ' ' + BUILD_TIME;
 
 #endif
