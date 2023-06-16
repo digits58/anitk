@@ -187,7 +187,12 @@ int main(int argc, char **argv) {
       }
     }
     ImGui::SameLine();
-    ImGui::Button("1. Analyze");
+    static CelFolder cels;
+
+    if (ImGui::Button("1. Analyze")) {
+      cels.setPath(inp);
+      cels.dedupeLayers();
+    }
     ImGui::Text("Output");
     ImGui::SameLine();
     ImGui::InputText("##Output", &outp);
@@ -205,12 +210,21 @@ int main(int argc, char **argv) {
       }
     }
     ImGui::SameLine();
-    ImGui::Button("2. Run    ");
+    bool runButton = false;
+    if (ImGui::Button("2. Run    ")) {
+      runButton = true;
+      for (const auto &[layer, paths] : cels.dedupe) {
+        auto changes = dedupeImagePaths(paths, outp);
+        for (const auto &[in, out] : changes) {
+          std::cout << in << "->" << out << std::endl;
+        }
+        executeChanges(changes, outp);
+      }
+    }
 
     ImGui::Separator();
 
     if (!inp.empty()) {
-      static CelFolder cels = CelFolder(inp);
       static bool first = true;
 
       ImVec2 contentRegion = ImGui::GetContentRegionAvail();
@@ -255,7 +269,7 @@ int main(int argc, char **argv) {
         }
         if (ImGui::TreeNode(buf)) {
           if (dedupes.count(layer) == 0)
-            dedupes[layer] = dedupeImagePaths(paths);
+            dedupes[layer] = dedupeImagePaths(paths, outp);
           for (const auto &[in, out] : dedupes[layer]) {
             ImGui::Text("%s", out.filename().string().c_str());
           }

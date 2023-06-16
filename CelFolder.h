@@ -16,12 +16,19 @@ public:
   std::map<std::string, std::set<fs::path>> layers;
   std::map<std::string, std::set<fs::path>> dedupe;
 
-  CelFolder(fs::path path) : folderPath(path) {
+  CelFolder() {}
+
+  CelFolder(fs::path path) : folderPath(path) { setPath(path); }
+
+  void setPath(fs::path path) {
+    folderPath = path;
     if (!fs::exists(folderPath))
       throw;
     if (!fs::is_directory(folderPath))
       throw;
     imagePaths = list();
+    layers.clear();
+    dedupe.clear();
     getLayers();
     // dedupeLayers();
   }
