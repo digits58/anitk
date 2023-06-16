@@ -89,6 +89,8 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_link_options(anitk PRIVATE -mwindows)
         target_link_libraries(anitk PRIVATE -static gcc stdc++)
+    else()
+        target_link_options(anitk PRIVATE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
     endif()
 endif()
 
