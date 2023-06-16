@@ -2,6 +2,10 @@
 
 A toolkit for creating animation
 
+* Requirements
+** Linux
+gtk3
+
 * Building
 #+begin_src sh
 git submodule update --init --recursive
