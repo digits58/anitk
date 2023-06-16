@@ -18,6 +18,6 @@
                                  (mapcar (lambda (p) (concat "-I" p)) project-includes))))
               (eval . (setq-local company-clang-arguments clang-args))
               (eval . (setq-local flycheck-clang-include-path project-includes))
-              (eval . (setq-local compile-command "cmake --build build/debug"))
+              (eval . (setq-local compile-command "cmake --build build/debug CMAKE_BUILD_TYPE=Debug"))
               (flycheck-clang-tidy-extra-options . "-extra-arg=-std=c++1z")
               (flycheck-clang-language-standard . "c++1z"))))

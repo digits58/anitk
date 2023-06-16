@@ -90,7 +90,7 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
         target_link_options(anitk PRIVATE -mwindows)
         target_link_libraries(anitk PRIVATE -static gcc stdc++)
     else()
-        target_link_options(anitk PRIVATE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
     endif()
 endif()
 
@@ -99,7 +99,7 @@ target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib nfd)
 # Testing - Only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ANITK_BUILD_TESTING)
-        AND BUILD_TESTING)
+        AND BUILD_TESTING AND (NOT CMAKE_BUILD_TYPE STREQUAL "Release"))
   # Use system Catch2 or extern
   # find_package(Catch2 QUIET)
   if (NOT Catch2_FOUND)
