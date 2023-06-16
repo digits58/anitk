@@ -18,6 +18,8 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
+#include "nfd.hpp"
+
 #include "CelFolder.h"
 #include "config.h"
 #include "lib.h"
@@ -43,6 +45,7 @@ void drop_callback(GLFWwindow *window [[maybe_unused]], int count,
 }
 
 int main(int argc, char **argv) {
+
   if (argc > 1) {
     CelsPath = argv[1];
   }
@@ -142,8 +145,12 @@ int main(int argc, char **argv) {
   // bool show_demo_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+  NFD::Guard nfdGuard;        // quit after scope
+  NFD::UniquePath inputPath;  // free after scope
+  NFD::UniquePath outputPath; // free after scope
+
   // Drag and drop loop
-  while (!glfwWindowShouldClose(window) && CelsPath.empty()) {
+  while (!glfwWindowShouldClose(window)) {
     glfwWaitEvents();
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -160,130 +167,106 @@ int main(int argc, char **argv) {
     ImGui::Text("build date: %s", BUILD_TIMESTAMP.c_str());
     ImGui::Separator();
 
-    static std::string inputPath, outputPath;
-    ImGui::InputText("Input", &inputPath);
-    ImGui::InputText("Output", &outputPath);
+    static std::string inp;
+    static std::string outp;
 
-    auto windowWidth = ImGui::GetContentRegionAvail().x;
-    auto windowHeight = ImGui::GetContentRegionAvail().y;
-    if (CelsPath.empty()) {
-      std::string text = "Drag and drop cel folder";
-      auto textWidth = ImGui::CalcTextSize(text.c_str()).x;
-      auto textHeight = ImGui::CalcTextSize(text.c_str()).y;
-      ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-      ImGui::SetCursorPosY((windowHeight - textHeight) * 0.5f);
-
-      ImGui::Text("%s", text.c_str());
-
-    } else {
-      std::string text = "Loading";
-      auto textWidth = ImGui::CalcTextSize(text.c_str()).x;
-      auto textHeight = ImGui::CalcTextSize(text.c_str()).y;
-      ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-      ImGui::SetCursorPosY((windowHeight - textHeight) * 0.5f);
-
-      ImGui::Text("%s", text.c_str());
-    }
-    ImGui::End();
-
-    // Rendering
-    ImGui::Render();
-    int display_w, display_h;
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    glfwSwapBuffers(window);
-  }
-
-  while (!glfwWindowShouldClose(window)) {
-    glfwWaitEvents();
-
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-
-    ImGui::Begin("Layers", nullptr, ImGuiWindowFlags_NoDecoration);
-
-    static CelFolder cels = CelFolder(CelsPath);
-    static std::string dest = "output";
-    static bool first = true;
-
-    ImGui::Text("Src: %s", CelsPath.string().c_str());
-    ImGui::Text("Dest: %s", dest.c_str());
-    // ImGui::SameLine();
-    // ImGui::InputText("##Destination", &dest);
-
-    if (ImGui::Button("Run")) {
-      for (const auto &[layer, paths] : cels.dedupe) {
-        auto changes = dedupeImagePaths(paths);
-        // for (const auto& [in, out] : changes) {
-        //   std::cout<< in << "->" << out << std::endl;
-        // }
-        executeChanges(changes);
-      }
-    };
-    ImGui::Separator();
-
-    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
-
-    ImGui::BeginChild("Input", ImVec2(contentRegion.x / 2.0f - 10.0f, -1.0f));
-    ImGui::Text("%s", "Input");
-    ImGui::Separator();
-
-    for (const auto &[layer, paths] : cels.layers) {
-      char buf[256];
-      snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
-      if (first) {
-        ImGui::SetNextItemOpen(true);
-      }
-      if (ImGui::TreeNode(buf)) {
-        for (const auto &p : paths) {
-          ImGui::Text("%s", p.filename().string().c_str());
-        }
-        ImGui::TreePop();
-      }
-    }
-
-    ImGui::EndChild();
-
+    ImGui::Text("Input ");
     ImGui::SameLine();
-
-    ImGui::BeginChild("Output", ImVec2(contentRegion.x / 2.0f - 10.0f, -1.0f));
-    // static int i0 = digitCount(cels.imagePaths.begin()->filename().string());
-    // ImGui::InputInt("zero padding", &i0);
-    ImGui::Text("%s", "Output");
-    ImGui::Separator();
-
-    static std::map<std::string, std::vector<std::pair<fs::path, fs::path>>>
-        dedupes;
-    for (const auto &[layer, paths] : cels.dedupe) {
-      char buf[256];
-      snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
-      if (first) {
-        ImGui::SetNextItemOpen(true);
-      }
-      if (ImGui::TreeNode(buf)) {
-        if (dedupes.count(layer) == 0)
-          dedupes[layer] = dedupeImagePaths(paths);
-        for (const auto &[in, out] : dedupes[layer]) {
-          ImGui::Text("%s", out.filename().string().c_str());
-        }
-        ImGui::TreePop();
+    ImGui::InputText("##Input", &inp);
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##InputPath")) {
+      // show the dialog
+      nfdresult_t result = NFD::PickFolder(inputPath);
+      if (result == NFD_OKAY) {
+        inp = inputPath.get();
+        std::cout << inputPath.get() << std::endl;
+      } else if (result == NFD_CANCEL) {
+        std::cout << "User pressed cancel." << std::endl;
+      } else {
+        std::cout << "Error: " << NFD::GetError() << std::endl;
       }
     }
-    first = false;
-    ImGui::EndChild();
-    ImGui::End();
+    ImGui::SameLine();
+    ImGui::Button("1. Analyze");
+    ImGui::Text("Output");
+    ImGui::SameLine();
+    ImGui::InputText("##Output", &outp);
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##OutputPath")) {
+      // show the dialog
+      nfdresult_t result = NFD::PickFolder(outputPath);
+      if (result == NFD_OKAY) {
+        outp = outputPath.get();
+        std::cout << outputPath.get() << std::endl;
+      } else if (result == NFD_CANCEL) {
+        std::cout << "User pressed cancel." << std::endl;
+      } else {
+        std::cout << "Error: " << NFD::GetError() << std::endl;
+      }
+    }
+    ImGui::SameLine();
+    ImGui::Button("2. Run    ");
 
-    // if (show_demo_window)
-    //   ImGui::ShowDemoWindow(&show_demo_window);
+    ImGui::Separator();
+
+    if (!inp.empty()) {
+      static CelFolder cels = CelFolder(inp);
+      static bool first = true;
+
+      ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+      ImGui::BeginChild("Input", ImVec2(contentRegion.x / 2.0f - 10.0f, -1.0f));
+      ImGui::Text("%s", "Input");
+      ImGui::Separator();
+
+      for (const auto &[layer, paths] : cels.layers) {
+        char buf[256];
+        snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
+        if (first) {
+          ImGui::SetNextItemOpen(true);
+        }
+        if (ImGui::TreeNode(buf)) {
+          for (const auto &p : paths) {
+            ImGui::Text("%s", p.filename().string().c_str());
+          }
+          ImGui::TreePop();
+        }
+      }
+
+      ImGui::EndChild();
+
+      ImGui::SameLine();
+
+      ImGui::BeginChild("Output",
+                        ImVec2(contentRegion.x / 2.0f - 10.0f, -1.0f));
+      // static int i0 =
+      // digitCount(cels.imagePaths.begin()->filename().string());
+      // ImGui::InputInt("zero padding", &i0);
+      ImGui::Text("%s", "Output");
+      ImGui::Separator();
+
+      static std::map<std::string, std::vector<std::pair<fs::path, fs::path>>>
+          dedupes;
+      for (const auto &[layer, paths] : cels.dedupe) {
+        char buf[256];
+        snprintf(buf, 255, "%s (%ld)", layer.c_str(), paths.size());
+        if (first) {
+          ImGui::SetNextItemOpen(true);
+        }
+        if (ImGui::TreeNode(buf)) {
+          if (dedupes.count(layer) == 0)
+            dedupes[layer] = dedupeImagePaths(paths);
+          for (const auto &[in, out] : dedupes[layer]) {
+            ImGui::Text("%s", out.filename().string().c_str());
+          }
+          ImGui::TreePop();
+        }
+      }
+      first = false;
+      ImGui::EndChild();
+    }
+
+    ImGui::End();
 
     // Rendering
     ImGui::Render();

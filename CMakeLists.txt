@@ -26,6 +26,9 @@ if (NOT glfw3_FOUND)
   add_subdirectory(extern/glfw)
 endif()
 
+# nativefiledialog-extended
+add_subdirectory(extern/nativefiledialog-extended)
+
 # Configure
 find_package(Git)
 if (Git_FOUND)
@@ -62,6 +65,9 @@ target_include_directories(anitk PRIVATE
     extern/imgui/backends
     extern/imgui/misc/cpp)
 target_include_directories(anitk PRIVATE
+    extern/nativefiledialog-extended/src/include
+)
+target_include_directories(anitk PRIVATE
     ${PROJECT_BINARY_DIR})
 
 target_sources(anitk PRIVATE anitk.cpp)
@@ -85,7 +91,8 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
         target_link_libraries(anitk PRIVATE -static gcc stdc++)
     endif()
 endif()
-target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib)
+
+target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib nfd)
 
 # Testing - Only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well

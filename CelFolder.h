@@ -1,6 +1,6 @@
 #include <filesystem>
-#include <set>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "crc32.h"
@@ -10,41 +10,43 @@ namespace fs = std::filesystem;
 class CelFolder {
 
 public:
-
   fs::path folderPath;
   std::set<fs::path> imagePaths;
-  
 
   std::map<std::string, std::set<fs::path>> layers;
   std::map<std::string, std::set<fs::path>> dedupe;
 
   CelFolder(fs::path path) : folderPath(path) {
-    if (!fs::exists(folderPath)) throw;
-    if (!fs::is_directory(folderPath)) throw;
+    if (!fs::exists(folderPath))
+      throw;
+    if (!fs::is_directory(folderPath))
+      throw;
     imagePaths = list();
     getLayers();
-    dedupeLayers();
+    // dedupeLayers();
   }
 
   std::set<fs::path> list() {
     std::set<fs::path> paths;
-    for (const fs::directory_entry &entry : fs::directory_iterator(folderPath)) {
+    for (const fs::directory_entry &entry :
+         fs::directory_iterator(folderPath)) {
       paths.insert(entry.path());
     }
     return paths;
   }
 
   void getLayers() {
-    for (const fs::directory_entry &entry : fs::directory_iterator(folderPath)) {
-      if(fs::is_regular_file(entry)) {
-          std::string header = entry.path().filename().string().substr(0,1);
+    for (const fs::directory_entry &entry :
+         fs::directory_iterator(folderPath)) {
+      if (fs::is_regular_file(entry)) {
+        std::string header = entry.path().filename().string().substr(0, 1);
         layers[header].insert(entry.path());
       }
     }
   }
 
   void dedupeLayers() {
-    for (auto &[k,v] : layers) {
+    for (auto &[k, v] : layers) {
       dedupe[k] = dedupeLayer(v);
     }
   }
