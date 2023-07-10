@@ -1,6 +1,9 @@
 #+TITLE: anitk
 
-A toolkit for creating animation
+A cross-platform toolkit for assisting animation production
+
+* Features
+- Duplication Removal
 
 * Requirements
 ** Linux
