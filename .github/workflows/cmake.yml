@@ -3,8 +3,9 @@ name: CMake
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    paths-ignore:
+      - README.org
+      - .dir-locals.el
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

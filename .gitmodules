@@ -18,3 +18,7 @@
 	path = extern/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
     shallow = true
+[submodule "extern/json"]
+	path = extern/json
+	url = https://github.com/nlohmann/json
+    shallow = true

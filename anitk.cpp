@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <stdio.h>
@@ -19,11 +20,13 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 #include "nfd.hpp"
+#include "nlohmann/json.hpp"
 
 #include "CelFolder.h"
 #include "config.h"
 #include "lib.h"
 
+using json = nlohmann::json;
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
@@ -45,7 +48,6 @@ void drop_callback(GLFWwindow *window [[maybe_unused]], int count,
 }
 
 int main(int argc, char **argv) {
-
   if (argc > 1) {
     CelsPath = argv[1];
   }

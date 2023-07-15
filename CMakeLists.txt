@@ -52,6 +52,8 @@ target_sources(lib PRIVATE lib.cpp crc32.cpp)
 
 target_link_libraries(lib PRIVATE OpenGL::GL)
 
+# nlohmann_json
+add_subdirectory(extern/json)
 
 # anitk
 add_executable(anitk)
@@ -90,7 +92,7 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     endif()
 endif()
 
-target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib nfd)
+target_link_libraries(anitk PRIVATE OpenGL::GL glfw lib nfd nlohmann_json::nlohmann_json)
 
 # Testing - Only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well

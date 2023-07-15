@@ -12,12 +12,14 @@
                                      "extern/imgui/misc/cpp"
                                      "extern/Catch2/src"
                                      "extern/glfw/include"
-                                     "extern/stb"))))
+                                     "extern/stb"
+                                     "extern/nativefiledialog-extended/src/include"
+                                     "extern/json/include"))))
               (eval . (set (make-local-variable 'clang-args)
                            (cons "-std=c++1z"
                                  (mapcar (lambda (p) (concat "-I" p)) project-includes))))
               (eval . (setq-local company-clang-arguments clang-args))
               (eval . (setq-local flycheck-clang-include-path project-includes))
-              (eval . (setq-local compile-command "cmake --build build/debug CMAKE_BUILD_TYPE=Debug"))
+              (eval . (setq-local compile-command "CMAKE_BUILD_TYPE=Debug cmake --build build/debug"))
               (flycheck-clang-tidy-extra-options . "-extra-arg=-std=c++1z")
               (flycheck-clang-language-standard . "c++1z"))))
